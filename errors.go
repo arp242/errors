@@ -12,14 +12,19 @@ import (
 )
 
 var (
-	Package   string //= "zgo.at/goatcounter"
-	StackSize int    = 32
+	// Package to add trace lines for; if blank all traces are added.
+	Package string
+
+	// StackSize is the maximum stack sized added to errors. Set to 0 to
+	// disable.
+	StackSize int = 32
 )
 
-func New(text string) error                 { return addStack(errors.New(text)) }
-func Unwrap(err error) error                { return addStack(errors.Unwrap(err)) }
-func Is(err, target error) bool             { return errors.Is(err, target) }
-func As(err error, target interface{}) bool { return errors.As(err, target) }
+func New(text string) error                   { return addStack(errors.New(text)) }
+func Errorf(f string, a ...interface{}) error { return addStack(fmt.Errorf(f, a...)) }
+func Unwrap(err error) error                  { return errors.Unwrap(err) }
+func Is(err, target error) bool               { return errors.Is(err, target) }
+func As(err error, target interface{}) bool   { return errors.As(err, target) }
 
 // Wrap an error with fmt.Errorf(), returning nil if err is nil.
 func Wrap(err error, s string) error {
@@ -35,12 +40,6 @@ func Wrapf(err error, format string, a ...interface{}) error {
 		return nil
 	}
 	return addStack(fmt.Errorf(format+": %w", append(a, err)...))
-}
-
-// Errorf creates a new error. This is like fmt.Errorf() but also adds a stack
-// trace.
-func Errorf(format string, a ...interface{}) error {
-	return addStack(fmt.Errorf(format, a...))
 }
 
 func addStack(err error) error {
