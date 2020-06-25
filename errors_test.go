@@ -5,6 +5,12 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
+)
+
+var (
+	_ error = &Group{}
+	_ error = &StackErr{}
 )
 
 func TestWrap(t *testing.T) {
@@ -44,7 +50,7 @@ func TestStack(t *testing.T) {
 	err := New("err")
 	want := `err
 	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:44
+		/home/martin/code/errors/errors_test.go:50
 	testing.tRunner()
 		/usr/lib/go/src/testing/testing.go:991
 	runtime.goexit()
@@ -57,7 +63,7 @@ func TestStack(t *testing.T) {
 	err = New("err")
 	want = `err
 	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:57` + "\n"
+		/home/martin/code/errors/errors_test.go:63` + "\n"
 	if err.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", err.Error(), want)
 	}
@@ -67,7 +73,7 @@ func TestStack(t *testing.T) {
 	err = New("err")
 	want = `err
 	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:67
+		/home/martin/code/errors/errors_test.go:73
 	testing.tRunner()
 		/usr/lib/go/src/testing/testing.go:991` + "\n"
 	if err.Error() != want {
@@ -80,4 +86,29 @@ func TestStack(t *testing.T) {
 	if err.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", err.Error(), want)
 	}
+}
+
+func TestGroup(t *testing.T) {
+	g := new(Group)
+	want := ""
+	if g.Error() != want {
+		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
+	}
+
+	g.Append(New("X"))
+	want = "1 errors:\nX\n"
+	if g.Error() != want {
+		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
+	}
+
+	g.Append(fmt.Errorf("Y"))
+	want = "2 errors:\nX\nY\n"
+	if g.Error() != want {
+		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
+	}
+
+	// Make sure there's no race error.
+	go func() { g.Append(New("A")) }()
+	g.Append(New("B"))
+	time.Sleep(10 * time.Millisecond)
 }

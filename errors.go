@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 var (
@@ -71,19 +72,52 @@ func addStack(err error) error {
 		}
 	}
 
-	return &stackErr{err: err, stack: b.String()}
+	return &StackErr{err: err, stack: b.String()}
 }
 
-type stackErr struct {
+type StackErr struct {
 	stack string
 	err   error
 }
 
-func (err stackErr) Unwrap() error { return err.err }
+func (err StackErr) Unwrap() error { return err.err }
 
-func (err stackErr) Error() string {
+func (err StackErr) Error() string {
 	if err.stack == "" {
 		return fmt.Sprintf("%s", err.err)
 	}
 	return fmt.Sprintf("%s\n%s", err.err, err.stack)
+}
+
+// Group multiple errors.
+type Group struct {
+	mu   sync.Mutex
+	errs []error
+}
+
+// Len returns the number of errors.
+func (g Group) Len() int { return len(g.errs) }
+
+// Append a new error to the list. This is thread-safe.
+func (g *Group) Append(err error) {
+	g.mu.Lock()
+	g.errs = append(g.errs, err)
+	g.mu.Unlock()
+}
+
+func (g Group) Error() string {
+	if len(g.errs) == 0 {
+		return ""
+	}
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "%d errors:\n", len(g.errs))
+	for _, e := range g.errs {
+		if e2, ok := e.(*StackErr); ok {
+			e = e2.Unwrap()
+		}
+		b.WriteString(e.Error())
+		b.WriteByte('\n')
+	}
+	return b.String()
 }

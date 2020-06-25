@@ -2,7 +2,7 @@ Yet another `errors` package for Go.
 
 Import as `zgo.at/errors`; [godoc](https://pkg.go.dev/zgo.at/errors).
 
-This is based on the new errors API introduced in Go 1.13 with 2 changes:
+This is based on the new errors API introduced in Go 1.13 with:
 
 1. It adds `Wrap(err, "ctx")` and `Wrapf(err, "ctx", ...)`, which return nil if
    the passed error is nil. I tried using the `fmt.Errorf("...: %w", err)`
@@ -22,10 +22,11 @@ This is based on the new errors API introduced in Go 1.13 with 2 changes:
            return nil
        }
 
-2. A stack trace is added. I know it's not needed with appropriate context, but
+2. A stack trace is added with `erorrs.New()`, `errors.Errorf()`, and
+   `erorrs.Wrap[f]()` I know it's not needed with appropriate context but
    sometimes I accidentally add the same context more than once, or just want to
-   be sure where *exactly* the error is coming from. Especially on dev it's much
-   more convenient. You can disable this if you want by setting
+   quickly see where *exactly* the error is coming from. Especially on dev it's
+   much more convenient. You can disable this if you want by setting
    `errors.StackSize = 0`.
 
    You can use `errors.Package` to only add stack traces for a specific package.
@@ -33,4 +34,6 @@ This is based on the new errors API introduced in Go 1.13 with 2 changes:
    in `zgo.at/goatcounter/...`
 
    You can control the maximum stack size with `errors.StackSize`; set to `0` to
-   disable adding stack traces alltogether (i.e. on production).
+   disable adding stack traces altogether (i.e. on production).
+
+3. `Group` type for collecting grouped errors.
