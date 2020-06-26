@@ -89,7 +89,7 @@ func TestStack(t *testing.T) {
 }
 
 func TestGroup(t *testing.T) {
-	g := new(Group)
+	g := NewGroup(0)
 	want := ""
 	if g.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
@@ -114,7 +114,7 @@ func TestGroup(t *testing.T) {
 }
 
 func TestGroupMaxSize(t *testing.T) {
-	g := Group{MaxSize: 3}
+	g := NewGroup(3)
 	want := ""
 	if g.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)

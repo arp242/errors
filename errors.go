@@ -94,9 +94,15 @@ type Group struct {
 	// Maximum number of errors; calls to Append() won't do anything if the number of errors is larger than this.
 	MaxSize int
 
-	mu    sync.Mutex
+	mu    *sync.Mutex
 	errs  []error
 	nerrs int
+}
+
+// NewGroup create a new Group instance. It will record a maximum of maxSize
+// errors. Set to 0 for no limit.
+func NewGroup(maxSize int) *Group {
+	return &Group{MaxSize: maxSize, mu: new(sync.Mutex)}
 }
 
 // Len returns the number of errors.
