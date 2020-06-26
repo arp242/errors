@@ -91,8 +91,12 @@ func (err StackErr) Error() string {
 
 // Group multiple errors.
 type Group struct {
-	mu   sync.Mutex
-	errs []error
+	// Maximum number of errors; calls to Append() won't do anything if the number of errors is larger than this.
+	MaxSize int
+
+	mu    sync.Mutex
+	errs  []error
+	nerrs int
 }
 
 // Len returns the number of errors.
@@ -101,7 +105,10 @@ func (g Group) Len() int { return len(g.errs) }
 // Append a new error to the list. This is thread-safe.
 func (g *Group) Append(err error) {
 	g.mu.Lock()
-	g.errs = append(g.errs, err)
+	g.nerrs++
+	if g.MaxSize == 0 || len(g.errs) < g.MaxSize {
+		g.errs = append(g.errs, err)
+	}
 	g.mu.Unlock()
 }
 
@@ -111,7 +118,11 @@ func (g Group) Error() string {
 	}
 
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d errors:\n", len(g.errs))
+	if g.nerrs > len(g.errs) {
+		fmt.Fprintf(&b, "%d errors (first %d shown):\n", g.nerrs, len(g.errs))
+	} else {
+		fmt.Fprintf(&b, "%d errors:\n", len(g.errs))
+	}
 	for _, e := range g.errs {
 		if e2, ok := e.(*StackErr); ok {
 			e = e2.Unwrap()

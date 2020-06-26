@@ -112,3 +112,25 @@ func TestGroup(t *testing.T) {
 	g.Append(New("B"))
 	time.Sleep(10 * time.Millisecond)
 }
+
+func TestGroupMaxSize(t *testing.T) {
+	g := Group{MaxSize: 3}
+	want := ""
+	if g.Error() != want {
+		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
+	}
+
+	g.Append(New("A"))
+	g.Append(New("B"))
+	g.Append(New("C"))
+	want = "3 errors:\nA\nB\nC\n"
+	if g.Error() != want {
+		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
+	}
+
+	g.Append(New("D"))
+	want = "4 errors (first 3 shown):\nA\nB\nC\n"
+	if g.Error() != want {
+		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
+	}
+}
