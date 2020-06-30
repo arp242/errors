@@ -103,6 +103,8 @@ func TestGroup(t *testing.T) {
 	}
 
 	g.Append(fmt.Errorf("Y"))
+	var n error
+	g.Append(n)
 	want = "2 errors:\nX\nY\n"
 	if g.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)

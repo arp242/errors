@@ -115,6 +115,10 @@ func (g Group) Len() int { return len(g.errs) }
 
 // Append a new error to the list. This is thread-safe.
 func (g *Group) Append(err error) {
+	if err == nil {
+		return
+	}
+
 	g.mu.Lock()
 	g.nerrs++
 	if g.MaxSize == 0 || len(g.errs) < g.MaxSize {
