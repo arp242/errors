@@ -75,12 +75,17 @@ func addStack(err error) error {
 	return &StackErr{err: err, stack: b.String()}
 }
 
+type StackTracer interface {
+	StackTrace() string
+}
+
 type StackErr struct {
 	stack string
 	err   error
 }
 
-func (err StackErr) Unwrap() error { return err.err }
+func (err StackErr) Unwrap() error      { return err.err }
+func (err StackErr) StackTrace() string { return err.stack }
 
 func (err StackErr) Error() string {
 	if err.stack == "" {

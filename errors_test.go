@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	_ error = &Group{}
-	_ error = &StackErr{}
+	_ error       = &Group{}
+	_ error       = &StackErr{}
+	_ StackTracer = &StackErr{}
 )
 
 func TestWrap(t *testing.T) {
@@ -50,7 +51,7 @@ func TestStack(t *testing.T) {
 	err := New("err")
 	want := `err
 	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:50
+		/home/martin/code/errors/errors_test.go:51
 	testing.tRunner()
 		/usr/lib/go/src/testing/testing.go:991
 	runtime.goexit()
@@ -63,7 +64,7 @@ func TestStack(t *testing.T) {
 	err = New("err")
 	want = `err
 	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:63` + "\n"
+		/home/martin/code/errors/errors_test.go:64` + "\n"
 	if err.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", err.Error(), want)
 	}
@@ -73,7 +74,7 @@ func TestStack(t *testing.T) {
 	err = New("err")
 	want = `err
 	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:73
+		/home/martin/code/errors/errors_test.go:74
 	testing.tRunner()
 		/usr/lib/go/src/testing/testing.go:991` + "\n"
 	if err.Error() != want {
