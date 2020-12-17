@@ -1,7 +1,4 @@
-// Package errors adds Wrap(), Wrapf(), and stack traces to stdlib's errors.
-//
-// Wrap() removes the need for quite a few if err != nil checks and makes
-// migrating from pkg/errors to Go 1.13 errors a bit easier.
+// Package errors adds some useful error helpers.
 package errors
 
 import (
@@ -96,7 +93,8 @@ func (err StackErr) Error() string {
 
 // Group multiple errors.
 type Group struct {
-	// Maximum number of errors; calls to Append() won't do anything if the number of errors is larger than this.
+	// Maximum number of errors; calls to Append() won't do anything if the
+	// number of errors is larger than this.
 	MaxSize int
 
 	mu    *sync.Mutex
