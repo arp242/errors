@@ -53,11 +53,7 @@ func TestStack(t *testing.T) {
 	err := New("err")
 	want := `err
 	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:51
-	testing.tRunner()
-		/usr/lib/go/src/testing/testing.go:991
-	runtime.goexit()
-		/usr/lib/go/src/runtime/asm_amd64.s:1373` + "\n"
+		/home/martin/code/errors/errors_test.go:53` + "\n"
 	if err.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", err.Error(), want)
 	}
@@ -66,21 +62,21 @@ func TestStack(t *testing.T) {
 	err = New("err")
 	want = `err
 	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:64` + "\n"
+		/home/martin/code/errors/errors_test.go:62` + "\n"
 	if err.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", err.Error(), want)
 	}
 
 	Package = ""
 	StackSize = 2
-	err = New("err")
+	err = func() error { return func() error { return New("err") }() }()
 	want = `err
-	zgo.at/errors.TestStack()
-		/home/martin/code/errors/errors_test.go:74
-	testing.tRunner()
-		/usr/lib/go/src/testing/testing.go:991` + "\n"
+	zgo.at/errors.TestStack.func1.1()
+		/home/martin/code/errors/errors_test.go:72
+	zgo.at/errors.TestStack.func1()
+		/home/martin/code/errors/errors_test.go:72` + "\n"
 	if err.Error() != want {
-		t.Errorf("\nout:  %q\nwant: %q", err.Error(), want)
+		t.Errorf("\nout:  %s\nwant: %s", err.Error(), want)
 	}
 
 	StackSize = 0

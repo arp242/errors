@@ -54,7 +54,8 @@ func addStack(err error) error {
 	var b strings.Builder
 	for {
 		frame, more := frames.Next()
-		if Package != "" && !strings.HasPrefix(frame.Function, Package) {
+		if frame.Function == "testing.tRunner" || frame.Function == "runtime.goexit" ||
+			(Package != "" && !strings.HasPrefix(frame.Function, Package)) {
 			if !more {
 				break
 			}
