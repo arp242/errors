@@ -1,6 +1,6 @@
 Yet another `errors` package for Go.
 
-Import as `zgo.at/errors`; [godoc](https://pkg.go.dev/zgo.at/errors).
+Import as `zgo.at/errors`; API docs: https://godocs.io/zgo.at/errors
 
 This is based on the new errors API introduced in Go 1.13 with the additions:
 

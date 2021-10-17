@@ -26,6 +26,14 @@ func As(err error, target interface{}) bool   { return errors.As(err, target) }
 
 // Wrap an error with fmt.Errorf(), returning nil if err is nil.
 func Wrap(err error, s string) error {
+	// TODO: considerer changing this; pkg/errors people reported problems with
+	// this, and actually, that makes sense.
+	//
+	// Instead, add errors.IfErr(err, "X") ... need to think of a better name.
+	// errors.WrapIf()
+	// errors.WrapIff()
+	// errors.IfWrap()
+	// errors.IfWrapf()
 	if err == nil {
 		return nil
 	}
