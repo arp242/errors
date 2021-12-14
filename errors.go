@@ -138,8 +138,11 @@ func (g Group) Error() string {
 	return b.String()
 }
 
-// Len returns the number of errors.
+// Len returns the number of errors we have stored.
 func (g Group) Len() int { return len(g.errs) }
+
+// Size returns the number of errors that occured.
+func (g Group) Size() int { return g.nerrs }
 
 // Append a new error to the list; this is thread-safe.
 //
