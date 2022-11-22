@@ -4,7 +4,9 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -57,25 +59,37 @@ func addStack(err error) error {
 	n := runtime.Callers(3, pc)
 	pc = pc[:n]
 
-	frames := runtime.CallersFrames(pc)
-
-	var b strings.Builder
+	var (
+		frames = runtime.CallersFrames(pc)
+		rows   = make([][]interface{}, 0, 8)
+		width  = 20
+	)
 	for {
-		frame, more := frames.Next()
-		if frame.Function == "testing.tRunner" || frame.Function == "runtime.goexit" ||
-			(Package != "" && !strings.HasPrefix(frame.Function, Package)) {
+		f, more := frames.Next()
+		if f.Function == "testing.tRunner" || f.Function == "runtime.goexit" ||
+			(Package != "" && !strings.HasPrefix(f.Function, Package)) {
 			if !more {
 				break
 			}
 			continue
 		}
-
-		// Don't format exactly the same as debug.PrintStack(); memory addresses
-		// aren't very useful here and only add to the noise.
-		b.WriteString(fmt.Sprintf("\t%s()\n\t\t%s:%d\n", frame.Function, frame.File, frame.Line))
 		if !more {
 			break
 		}
+
+		loc := filepath.Base(f.File) + ":" + strconv.Itoa(f.Line)
+		if len(loc) > width {
+			width = len(loc)
+		}
+		rows = append(rows, []interface{}{loc, f.Function})
+	}
+
+	// Don't format exactly the same as debug.PrintStack(); memory addresses
+	// aren't very useful here and only add to the noise.
+	b := new(strings.Builder)
+	f := fmt.Sprintf("\t%%-%ds   %%s\n", width)
+	for _, r := range rows {
+		fmt.Fprintf(b, f, r...)
 	}
 
 	return &StackErr{err: err, stack: b.String()}
@@ -149,12 +163,12 @@ func (g Group) Size() int { return g.nerrs }
 // It won't do anything if the error is nil, in which case it will return false.
 // This makes appending errors in a loop slightly nicer:
 //
-//   for {
-//       err := do()
-//       if errors.Append(err) {
-//           continue
-//       }
-//   }
+//	for {
+//	    err := do()
+//	    if errors.Append(err) {
+//	        continue
+//	    }
+//	}
 func (g *Group) Append(err error) bool {
 	if err == nil {
 		return false
@@ -173,7 +187,7 @@ func (g *Group) Append(err error) bool {
 //
 // It avoids an if-check at the end:
 //
-//   return errs.ErrorOrNil()
+//	return errs.ErrorOrNil()
 func (g *Group) ErrorOrNil() error {
 	if g.Len() == 0 {
 		return nil
