@@ -139,7 +139,7 @@ func (g Group) Error() string {
 	var b strings.Builder
 	if g.nerrs > len(g.errs) {
 		fmt.Fprintf(&b, "%d errors (first %d shown):\n", g.nerrs, len(g.errs))
-	} else {
+	} else if len(g.errs) > 1 {
 		fmt.Fprintf(&b, "%d errors:\n", len(g.errs))
 	}
 	for _, e := range g.errs {
@@ -147,7 +147,9 @@ func (g Group) Error() string {
 			e = e2.Unwrap()
 		}
 		b.WriteString(e.Error())
-		b.WriteByte('\n')
+		if len(g.errs) > 1 {
+			b.WriteByte('\n')
+		}
 	}
 	return b.String()
 }
@@ -174,11 +176,19 @@ func (g *Group) Append(err error) bool {
 		return false
 	}
 
+	var gErr *Group
+	errors.As(err, &gErr)
+
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	g.nerrs++
-	if g.MaxSize == 0 || len(g.errs) < g.MaxSize {
-		g.errs = append(g.errs, err)
+	if gErr != nil {
+		g.nerrs += len(gErr.errs)
+		g.errs = append(g.errs, gErr.errs...)
+	} else {
+		g.nerrs++
+		if g.MaxSize == 0 || len(g.errs) < g.MaxSize {
+			g.errs = append(g.errs, err)
+		}
 	}
 	return true
 }
@@ -193,4 +203,17 @@ func (g *Group) ErrorOrNil() error {
 		return nil
 	}
 	return g
+}
+
+// List all the errors; returns nil if there are no errors.
+func (g Group) List() []error {
+	if g.Len() == 0 {
+		return nil
+	}
+
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	e := make([]error, len(g.errs))
+	copy(e, g.errs)
+	return e
 }

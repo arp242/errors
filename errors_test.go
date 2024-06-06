@@ -95,7 +95,7 @@ func TestGroup(t *testing.T) {
 	}
 
 	g.Append(New("X"))
-	want = "1 errors:\nX\n"
+	want = "X"
 	if g.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
 	}
