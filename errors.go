@@ -22,6 +22,7 @@ var (
 
 func New(text string) error                   { return addStack(errors.New(text)) }
 func Errorf(f string, a ...interface{}) error { return addStack(fmt.Errorf(f, a...)) }
+func Join(errs ...error) error                { return errors.Join(errs...) }
 func Unwrap(err error) error                  { return errors.Unwrap(err) }
 func Is(err, target error) bool               { return errors.Is(err, target) }
 func As(err error, target interface{}) bool   { return errors.As(err, target) }
