@@ -20,12 +20,12 @@ var (
 	StackSize int = 32
 )
 
-func New(text string) error                   { return addStack(errors.New(text)) }
-func Errorf(f string, a ...interface{}) error { return addStack(fmt.Errorf(f, a...)) }
-func Join(errs ...error) error                { return errors.Join(errs...) }
-func Unwrap(err error) error                  { return errors.Unwrap(err) }
-func Is(err, target error) bool               { return errors.Is(err, target) }
-func As(err error, target interface{}) bool   { return errors.As(err, target) }
+func New(text string) error           { return addStack(errors.New(text)) }
+func Errorf(f string, a ...any) error { return addStack(fmt.Errorf(f, a...)) }
+func Join(errs ...error) error        { return errors.Join(errs...) }
+func Unwrap(err error) error          { return errors.Unwrap(err) }
+func Is(err, target error) bool       { return errors.Is(err, target) }
+func As(err error, target any) bool   { return errors.As(err, target) }
 
 // Wrap an error with fmt.Errorf(), returning nil if err is nil.
 func Wrap(err error, s string) error {
@@ -44,7 +44,7 @@ func Wrap(err error, s string) error {
 }
 
 // Wrapf an error with fmt.Errorf(), returning nil if err is nil.
-func Wrapf(err error, format string, a ...interface{}) error {
+func Wrapf(err error, format string, a ...any) error {
 	if err == nil {
 		return nil
 	}
@@ -62,7 +62,7 @@ func addStack(err error) error {
 
 	var (
 		frames = runtime.CallersFrames(pc)
-		rows   = make([][]interface{}, 0, 8)
+		rows   = make([][]any, 0, 8)
 		width  = 20
 	)
 	for {
@@ -82,7 +82,7 @@ func addStack(err error) error {
 		if len(loc) > width {
 			width = len(loc)
 		}
-		rows = append(rows, []interface{}{loc, f.Function})
+		rows = append(rows, []any{loc, f.Function})
 	}
 
 	// Don't format exactly the same as debug.PrintStack(); memory addresses
