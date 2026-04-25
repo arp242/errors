@@ -27,6 +27,25 @@ func Unwrap(err error) error          { return errors.Unwrap(err) }
 func Is(err, target error) bool       { return errors.Is(err, target) }
 func As(err error, target any) bool   { return errors.As(err, target) }
 
+// Unjoin splits out [errors.Join] to []error.
+//
+// Returns nil on nil errors, or []error{err} if it doesn't implement Unwrap()
+// []error.
+func Unjoin(err error) []error {
+	if err == nil {
+		return nil
+	}
+
+	list, ok := errors.AsType[interface {
+		Error() string
+		Unwrap() []error
+	}](err)
+	if !ok {
+		return []error{err}
+	}
+	return list.Unwrap()
+}
+
 // Wrap an error with fmt.Errorf(), returning nil if err is nil.
 func Wrap(err error, s string) error {
 	// TODO: considerer changing this; pkg/errors people reported problems with
@@ -161,6 +180,38 @@ func (g Group) Len() int { return len(g.errs) }
 // Size returns the number of errors that occured.
 func (g Group) Size() int { return g.nerrs }
 
+// Unwrap returns all errors; returns nil if there are no errors.
+func (g Group) Unwrap() []error {
+	if g.Len() == 0 {
+		return nil
+	}
+
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	e := make([]error, len(g.errs))
+	copy(e, g.errs)
+	return e
+}
+
+// List all the errors; returns nil if there are no errors.
+//
+// Deprecated: use Unwrap()
+//
+//go:fix inline
+func (g Group) List() []error { return g.Unwrap() }
+
+// ErrorOrNil returns itself if there are errors, or nil otherwise.
+//
+// It avoids an if-check at the end:
+//
+//	return errs.ErrorOrNil()
+func (g *Group) ErrorOrNil() error {
+	if g.Len() == 0 {
+		return nil
+	}
+	return g
+}
+
 // Append a new error to the list; this is thread-safe.
 //
 // It won't do anything if the error is nil, in which case it will return false.
@@ -192,29 +243,4 @@ func (g *Group) Append(err error) bool {
 		}
 	}
 	return true
-}
-
-// ErrorOrNil returns itself if there are errors, or nil otherwise.
-//
-// It avoids an if-check at the end:
-//
-//	return errs.ErrorOrNil()
-func (g *Group) ErrorOrNil() error {
-	if g.Len() == 0 {
-		return nil
-	}
-	return g
-}
-
-// List all the errors; returns nil if there are no errors.
-func (g Group) List() []error {
-	if g.Len() == 0 {
-		return nil
-	}
-
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	e := make([]error, len(g.errs))
-	copy(e, g.errs)
-	return e
 }

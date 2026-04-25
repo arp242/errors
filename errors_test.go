@@ -3,6 +3,7 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -133,5 +134,37 @@ func TestGroupMaxSize(t *testing.T) {
 	want = "4 errors (first 3 shown):\nA\nB\nC\n"
 	if g.Error() != want {
 		t.Errorf("\nout:  %q\nwant: %q", g.Error(), want)
+	}
+}
+
+func TestUnjoin(t *testing.T) {
+	tests := []struct {
+		in   error
+		want []error
+	}{
+		{nil, nil},
+		{errors.New("abc"), []error{errors.New("abc")}},
+		{fmt.Errorf("wrap: %w", errors.New("abc")), []error{fmt.Errorf("wrap: %w", errors.New("abc"))}},
+
+		{errors.Join(errors.New("abc")), []error{errors.New("abc")}},
+		{errors.Join(errors.New("abc"), errors.New("def")), []error{errors.New("abc"), errors.New("def")}},
+
+		{errors.Join(fmt.Errorf("wrap: %w", errors.New("abc"))), []error{fmt.Errorf("wrap: %w", errors.New("abc"))}},
+		{errors.Join(
+			fmt.Errorf("wrap: %w", errors.New("abc")),
+			fmt.Errorf("w: %w", errors.New("def")),
+		), []error{
+			fmt.Errorf("wrap: %w", errors.New("abc")),
+			fmt.Errorf("w: %w", errors.New("def")),
+		}},
+	}
+
+	for _, tt := range tests {
+		t.Run("", func(t *testing.T) {
+			have := Unjoin(tt.in)
+			if !reflect.DeepEqual(have, tt.want) {
+				t.Errorf("\nhave: %s\nwant: %s", have, tt.want)
+			}
+		})
 	}
 }
